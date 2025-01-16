@@ -23,15 +23,20 @@ const server = http.createServer((req, res) => {
 
 const wss = new WebSocketServer({ server })
 
-wss.on("connection", (ws) => {
+wss.on("connection", (ws,req) => {
   console.log("WebSocket connection established!")
-
+     const urlParams = new URL(req.url, `http://${req.headers.host}`);
+     const name = urlParams.searchParams.get("name")
+     console.log(name,"connected")
   ws.send("Welcome to the WebSocket server!")
 
   ws.on("message", (message) => {
-    console.log(`Received: ${message}`)
-
-    ws.send(`You said: ${message}`)
+    console.log(`${name} said: ${message}`)
+        wss.clients.forEach((client)=> {
+          if (client !== ws) {
+            client.send(`${name} said: ${message}`)
+          }
+        })
   })
 
   ws.on("close", () => {
